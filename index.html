@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>霓虹深淵：貪食蛇小遊戲 | Cyber Snake</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 背景光暈 -->
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <div class="app-container">
+        <!-- 登入 & 註冊遮罩層 -->
+        <div id="auth-overlay" class="overlay">
+            <div class="auth-card glass-card">
+                <h1 class="neon-text-pink">CYBER SNAKE</h1>
+                <p class="subtitle">免費版貪食蛇 ‧ 霓虹深淵</p>
+                
+                <div class="tab-container">
+                    <button id="tab-login" class="tab-btn active">登入</button>
+                    <button id="tab-register" class="tab-btn">註冊</button>
+                </div>
+
+                <form id="auth-form">
+                    <div class="input-group">
+                        <label for="username">用戶名稱</label>
+                        <input type="text" id="username" required placeholder="請輸入用戶名" autocomplete="username">
+                    </div>
+                    <div class="input-group">
+                        <label for="password">密碼</label>
+                        <input type="password" id="password" required placeholder="請輸入密碼" autocomplete="current-password">
+                    </div>
+                    <button type="submit" id="submit-btn" class="neon-btn neon-btn-pink">進入深淵</button>
+                </form>
+
+                <div class="divider">
+                    <span>或</span>
+                </div>
+
+                <button id="guest-btn" class="neon-btn neon-btn-blue">以遊客身份遊玩</button>
+                <div id="auth-message" class="error-msg"></div>
+            </div>
+        </div>
+
+        <!-- 遊戲主畫面 -->
+        <main class="game-layout">
+            <!-- 左側/上方資訊看板 -->
+            <section class="sidebar-panel">
+                <div class="profile-card glass-card">
+                    <div class="user-info">
+                        <div class="avatar">👤</div>
+                        <div>
+                            <h3 id="display-username" class="neon-text-blue">遊客 (Guest)</h3>
+                            <span class="user-status">線上冒險者</span>
+                        </div>
+                    </div>
+                    <button id="logout-btn" class="logout-btn">登出</button>
+                </div>
+
+                <div class="stats-card glass-card">
+                    <div class="stat-item">
+                        <span class="stat-label">當前得分</span>
+                        <span id="current-score" class="stat-value neon-text-pink">000</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">個人最高紀錄</span>
+                        <span id="personal-high" class="stat-value neon-text-green">000</span>
+                    </div>
+                </div>
+
+                <div class="control-card glass-card">
+                    <h3>遊戲設定</h3>
+                    <div class="control-group">
+                        <label for="difficulty">速度難度</label>
+                        <select id="difficulty" class="glass-select">
+                            <option value="easy">簡單 (慢速)</option>
+                            <option value="normal" selected>中等 (標準)</option>
+                            <option value="hard">困難 (極速)</option>
+                        </select>
+                    </div>
+                    <div class="control-group toggle-group">
+                        <label>音效開關</label>
+                        <button id="sound-toggle" class="icon-toggle active">🔊 音效開啟</button>
+                    </div>
+                    <div class="action-buttons">
+                        <button id="start-btn" class="neon-btn neon-btn-green">開始遊戲</button>
+                        <button id="pause-btn" class="neon-btn neon-btn-blue" disabled>暫停</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 中央遊戲畫布區 -->
+            <section class="canvas-area">
+                <div class="canvas-container glass-card">
+                    <canvas id="game-canvas" width="400" height="400"></canvas>
+                    
+                    <!-- 遊戲準備開始覆蓋層 -->
+                    <div id="ready-overlay" class="canvas-overlay">
+                        <div class="overlay-content">
+                            <h2 class="neon-text-green">READY?</h2>
+                            <p>按下「開始遊戲」或空白鍵 [Space] 開始</p>
+                            <div class="instructions">
+                                <p>⌨️ 使用 W, A, S, D 或方向鍵控制移動</p>
+                                <p>⏸️ 按下 [P] 或 [Space] 暫停遊戲</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 遊戲暫停覆蓋層 -->
+                    <div id="paused-overlay" class="canvas-overlay hidden">
+                        <div class="overlay-content">
+                            <h2 class="neon-text-blue">PAUSED</h2>
+                            <p>遊戲已暫停</p>
+                            <p class="blink">按下空白鍵 [Space] 繼續</p>
+                        </div>
+                    </div>
+
+                    <!-- 遊戲結束覆蓋層 -->
+                    <div id="gameover-overlay" class="canvas-overlay hidden">
+                        <div class="overlay-content">
+                            <h2 class="neon-text-pink">GAME OVER</h2>
+                            <div class="final-stats">
+                                <p>最終得分：<span id="final-score" class="neon-text-pink">0</span></p>
+                                <p id="new-record-msg" class="neon-text-green hidden">🎉 創下個人新紀錄！</p>
+                            </div>
+                            <button id="restart-btn" class="neon-btn neon-btn-pink">重新開始</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 行動端虛擬搖桿 (小螢幕時顯示) -->
+                <div class="mobile-controller">
+                    <div class="ctrl-row">
+                        <button id="ctrl-up" class="ctrl-btn">▲</button>
+                    </div>
+                    <div class="ctrl-row">
+                        <button id="ctrl-left" class="ctrl-btn">◀</button>
+                        <div class="ctrl-space"></div>
+                        <button id="ctrl-right" class="ctrl-btn">▶</button>
+                    </div>
+                    <div class="ctrl-row">
+                        <button id="ctrl-down" class="ctrl-btn">▼</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 右側/下方排行榜 -->
+            <section class="leaderboard-panel">
+                <div class="leaderboard-card glass-card">
+                    <h3 class="neon-text-green">殿堂排行榜</h3>
+                    <p class="leaderboard-sub">前五名頂尖挑戰者</p>
+                    <ul id="leaderboard-list">
+                        <!-- 由 JS 動態生成 -->
+                        <li class="empty-list">尚無挑戰紀錄</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 載入指令腳本 -->
+    <script src="auth.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
