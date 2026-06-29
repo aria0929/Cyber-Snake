@@ -340,12 +340,16 @@ function renderLeaderboard() {
 
 // 渲染 DOM 的輔助函數
 function updateLeaderboardUI(listEl, leaderboard) {
-    if (leaderboard.length === 0) {
+    if (!leaderboard || leaderboard.length === 0) {
         listEl.innerHTML = '<li class="empty-list">尚無挑戰紀錄</li>';
         return;
     }
 
-    listEl.innerHTML = leaderboard.map((entry, index) => {
+    // 🛡️ 安全防禦：在前端渲染前，強制將分數轉為數字並進行「由大到小」排序。
+    // 這能防範：(1) Firebase 儲存順序錯亂；(2) 外部手動輸入字串比較產生的排序 Bug。
+    const sortedLeaderboard = [...leaderboard].sort((a, b) => Number(b.score) - Number(a.score));
+
+    listEl.innerHTML = sortedLeaderboard.map((entry, index) => {
         const rank = index + 1;
         let rankClass = '';
         if (rank <= 3) {
